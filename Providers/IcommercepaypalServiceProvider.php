@@ -38,6 +38,7 @@ class IcommercepaypalServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishConfig('icommercepaypal', 'permissions');
+        $this->publishConfig('icommercepaypal', 'config');
 
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
     }

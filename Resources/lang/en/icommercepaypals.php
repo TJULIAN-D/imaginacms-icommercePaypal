@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'single' => 'Paypal',
+    'description' => 'The description module',
     'list resource' => 'List icommercepaypals',
     'create resource' => 'Create icommercepaypals',
     'edit resource' => 'Edit icommercepaypals',
