@@ -27,7 +27,7 @@ class RegisterIcommercepaypalSidebar implements \Maatwebsite\Sidebar\SidebarExte
 
     public function handle(BuildingSidebar $sidebar)
     {
-        $sidebar->add($this->extendWith($sidebar->getMenu()));
+        //$sidebar->add($this->extendWith($sidebar->getMenu()));
     }
 
     /**
