@@ -27,7 +27,7 @@ $router->group(['prefix' =>'/icommercepaypal'], function (Router $router) {
         'uses' => 'IcommercePaypalController@edit',
         'middleware' => 'can:icommercepaypal.icommercepaypals.edit'
     ]);
-    $router->put('icommercepaypals/{icommercepaypal}', [
+    $router->put('icommercepaypals/{id}', [
         'as' => 'admin.icommercepaypal.icommercepaypal.update',
         'uses' => 'IcommercePaypalController@update',
         'middleware' => 'can:icommercepaypal.icommercepaypals.edit'

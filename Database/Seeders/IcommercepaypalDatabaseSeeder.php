@@ -20,9 +20,8 @@ class IcommercepaypalDatabaseSeeder extends Seeder
         $options['mainimage'] = "";
         $options['clientid'] = "";
         $options['clientsecret'] = "";
-        $options['mode'] = "sandbox"; //live
-        $options['endpoint'] = "https://api.sandbox.paypal.com"; // https://api.paypal.com
-
+        $options['mode'] = "sandbox";
+        
         $params = array(
             'title' => trans('icommercepaypal::icommercepaypals.single'),
             'description' => trans('icommercepaypal::icommercepaypals.description'),

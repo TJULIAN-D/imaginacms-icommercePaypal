@@ -1,109 +1,79 @@
-@extends('layouts.master')
+@php
+    $options = array('required' =>'required');
+    $formID = uniqid("form_id");
+@endphp
 
-@section('content-header')
-    <h1>
-        {{ trans('icommercepaypal::icommercepaypals.title.icommercepaypals') }}
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ route('dashboard.index') }}"><i class="fa fa-dashboard"></i> {{ trans('core::core.breadcrumb.home') }}</a></li>
-        <li class="active">{{ trans('icommercepaypal::icommercepaypals.title.icommercepaypals') }}</li>
-    </ol>
-@stop
+{!! Form::open(['route' => ['admin.icommercepaypal.icommercepaypal.update',$method->id], 'method' => 'put','name' => $formID]) !!}
 
-@section('content')
+<div class="col-xs-12 col-sm-9">
+
     <div class="row">
-        <div class="col-xs-12">
-            <div class="row">
-                <div class="btn-group pull-right" style="margin: 0 15px 15px 0;">
-                    <a href="{{ route('admin.icommercepaypal.icommercepaypal.create') }}" class="btn btn-primary btn-flat" style="padding: 4px 10px;">
-                        <i class="fa fa-pencil"></i> {{ trans('icommercepaypal::icommercepaypals.button.create icommercepaypal') }}
-                    </a>
-                </div>
-            </div>
-            <div class="box box-primary">
-                <div class="box-header">
-                </div>
-                <!-- /.box-header -->
-                <div class="box-body">
-                    <div class="table-responsive">
-                        <table class="data-table table table-bordered table-hover">
-                            <thead>
-                            <tr>
-                                <th>{{ trans('core::core.table.created at') }}</th>
-                                <th data-sortable="false">{{ trans('core::core.table.actions') }}</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <?php if (isset($icommercepaypals)): ?>
-                            <?php foreach ($icommercepaypals as $icommercepaypal): ?>
-                            <tr>
-                                <td>
-                                    <a href="{{ route('admin.icommercepaypal.icommercepaypal.edit', [$icommercepaypal->id]) }}">
-                                        {{ $icommercepaypal->created_at }}
-                                    </a>
-                                </td>
-                                <td>
-                                    <div class="btn-group">
-                                        <a href="{{ route('admin.icommercepaypal.icommercepaypal.edit', [$icommercepaypal->id]) }}" class="btn btn-default btn-flat"><i class="fa fa-pencil"></i></a>
-                                        <button class="btn btn-danger btn-flat" data-toggle="modal" data-target="#modal-delete-confirmation" data-action-target="{{ route('admin.icommercepaypal.icommercepaypal.destroy', [$icommercepaypal->id]) }}"><i class="fa fa-trash"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                            <?php endif; ?>
-                            </tbody>
-                            <tfoot>
-                            <tr>
-                                <th>{{ trans('core::core.table.created at') }}</th>
-                                <th>{{ trans('core::core.table.actions') }}</th>
-                            </tr>
-                            </tfoot>
-                        </table>
-                        <!-- /.box-body -->
+
+        <div class="nav-tabs-custom">
+            @include('partials.form-tab-headers')
+            <div class="tab-content">
+                <?php $i = 0; ?>
+                @foreach (LaravelLocalization::getSupportedLocales() as $locale => $language)
+                    <?php $i++; ?>
+                    <div class="tab-pane {{ locale() == $locale ? 'active' : '' }}" id="{{$method->name}}_tab_{{ $i }}">
+                        
+                        {!! Form::i18nInput('title', trans('icommerce::paymentmethods.table.title'), $errors, $locale, $method) !!}
+                        {!! Form::i18nInput('description', trans('icommerce::paymentmethods.table.description'), $errors, $locale, $method) !!}
+                    
                     </div>
-                </div>
-                <!-- /.box -->
+                @endforeach
             </div>
         </div>
+        
     </div>
-    @include('core::partials.delete-modal')
-@stop
 
-@section('footer')
-    <a data-toggle="modal" data-target="#keyboardShortcutsModal"><i class="fa fa-keyboard-o"></i></a> &nbsp;
-@stop
-@section('shortcuts')
-    <dl class="dl-horizontal">
-        <dt><code>c</code></dt>
-        <dd>{{ trans('icommercepaypal::icommercepaypals.title.create icommercepaypal') }}</dd>
-    </dl>
-@stop
+    <div class="row">
+    <div class="col-xs-12">
+        
+        <div class="form-group ">
+            <label for="clientid">{{trans('icommercepaypal::icommercepaypals.table.clientid')}}</label>
+            <input placeholder="{{trans('icommercepaypal::icommercepaypals.table.clientid')}}" required="required" name="clientid" type="text" id="clientid" class="form-control" value="{{$method->options->clientid}}">
+        </div>
 
-@push('js-stack')
-    <script type="text/javascript">
-        $( document ).ready(function() {
-            $(document).keypressAction({
-                actions: [
-                    { key: 'c', route: "<?= route('admin.icommercepaypal.icommercepaypal.create') ?>" }
-                ]
-            });
-        });
-    </script>
-    <?php $locale = locale(); ?>
-    <script type="text/javascript">
-        $(function () {
-            $('.data-table').dataTable({
-                "paginate": true,
-                "lengthChange": true,
-                "filter": true,
-                "sort": true,
-                "info": true,
-                "autoWidth": true,
-                "order": [[ 0, "desc" ]],
-                "language": {
-                    "url": '<?php echo Module::asset("core:js/vendor/datatables/{$locale}.json") ?>'
-                }
-            });
-        });
-    </script>
-@endpush
+        <div class="form-group ">
+            <label for="clientsecret">{{trans('icommercepaypal::icommercepaypals.table.clientsecret')}}</label>
+            <input placeholder="{{trans('icommercepaypal::icommercepaypals.table.clientsecret')}}" required="required" name="clientsecret" type="text" id="clientsecret" class="form-control" value="{{$method->options->clientsecret}}">
+        </div>
+
+        <div class="form-group">
+            <label for="mode">{{trans('icommercepaypal::icommercepaypals.table.mode')}}</label>
+            <select class="form-control" id="mode" name="mode" required>
+                    <option value="sandbox" @if(!empty($method->options->mode) && $method->options->mode=='sandbox') selected @endif>SANDBOX</option>
+                    <option value="live" @if(!empty($method->options->mode) && $method->options->mode=='live') selected @endif>LIVE</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <div>
+                <label class="checkbox-inline">
+                    <input name="status" type="checkbox" @if($method->status==1) checked @endif>{{trans('icommerce::paymentmethods.table.activate')}}
+                </label>
+            </div>   
+        </div>
+
+    </div>
+    </div>
+
+</div>
+
+<div class="col-sm-3">
+    
+    @include('icommercepaypal::admin.icommercepaypals.partials.featured-img',['crop' => 0,'name' => 'mainimage','action' => 'create'])
+    
+</div>
+    
+    
+ <div class="clearfix"></div>   
+
+    <div class="box-footer">
+    <button type="submit" class="btn btn-primary btn-flat">{{ trans('icommerce::paymentmethods.button.save configuration') }} {{$method->title}}</button>
+    </div>
+
+
+
+{!! Form::close() !!}

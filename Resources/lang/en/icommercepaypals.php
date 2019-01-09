@@ -16,6 +16,9 @@ return [
         'create icommercepaypal' => 'Create a icommercepaypal',
     ],
     'table' => [
+        'clientid' => 'Client ID',
+        'clientsecret' => 'Client Secret',
+        'mode' => 'Mode'
     ],
     'form' => [
     ],

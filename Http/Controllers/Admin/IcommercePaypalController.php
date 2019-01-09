@@ -9,6 +9,7 @@ use Modules\Icommercepaypal\Http\Requests\CreateIcommercePaypalRequest;
 use Modules\Icommercepaypal\Http\Requests\UpdateIcommercePaypalRequest;
 use Modules\Icommercepaypal\Repositories\IcommercePaypalRepository;
 use Modules\Core\Http\Controllers\Admin\AdminBaseController;
+use Modules\Icommerce\Repositories\PaymentMethodRepository;
 
 class IcommercePaypalController extends AdminBaseController
 {
@@ -16,12 +17,15 @@ class IcommercePaypalController extends AdminBaseController
      * @var IcommercePaypalRepository
      */
     private $icommercepaypal;
+    private $paymentMethod;
 
-    public function __construct(IcommercePaypalRepository $icommercepaypal)
-    {
+    public function __construct(
+        IcommercePaypalRepository $icommercepaypal,
+        PaymentMethodRepository $paymentMethod
+    ){
         parent::__construct();
-
         $this->icommercepaypal = $icommercepaypal;
+        $this->paymentMethod = $paymentMethod;
     }
 
     /**
@@ -78,12 +82,23 @@ class IcommercePaypalController extends AdminBaseController
      * @param  UpdateIcommercePaypalRequest $request
      * @return Response
      */
-    public function update(IcommercePaypal $icommercepaypal, UpdateIcommercePaypalRequest $request)
+    public function update($id, UpdateIcommercePaypalRequest $request)
     {
-        $this->icommercepaypal->update($icommercepaypal, $request->all());
+        
+        //Find payment Method
+        $paymentMethod = $this->paymentMethod->find($id);
+        
+        //Add status request
+        if($request->status=='on')
+            $request['status'] = "1";
+        else
+            $request['status'] = "0";
 
-        return redirect()->route('admin.icommercepaypal.icommercepaypal.index')
-            ->withSuccess(trans('core::core.messages.resource updated', ['name' => trans('icommercepaypal::icommercepaypals.title.icommercepaypals')]));
+        $this->icommercepaypal->update($paymentMethod,$request->all());
+
+        return redirect()->route('admin.icommerce.paymentmethod.index')
+            ->withSuccess(trans('core::core.messages.resource updated', ['name' => trans('icommercepaypal::icommercepaypals.single')]));
+        
     }
 
     /**
@@ -99,4 +114,5 @@ class IcommercePaypalController extends AdminBaseController
         return redirect()->route('admin.icommercepaypal.icommercepaypal.index')
             ->withSuccess(trans('core::core.messages.resource deleted', ['name' => trans('icommercepaypal::icommercepaypals.title.icommercepaypals')]));
     }
+
 }
