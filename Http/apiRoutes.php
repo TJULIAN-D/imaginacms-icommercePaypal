@@ -9,7 +9,7 @@ $router->group(['prefix' => 'icommercepaypal'], function (Router $router) {
         'uses' => 'IcommercePaypalApiController@init',
     ]);
 
-    $router->get('/response', [
+    $router->get('/method/response', [
         'as' => 'icommercepaypal.api.paypal.response',
         'uses' => 'IcommercePaypalApiController@response',
     ]);

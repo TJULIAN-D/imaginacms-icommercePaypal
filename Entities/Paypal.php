@@ -19,16 +19,19 @@ class Paypal
 		$this->url_ok = "icommercepaypal.api.paypal.response";
 		$this->url_ko = "icommercepaypal.api.paypal.response";
 
-		$this->_apiContext = Paypalpayment::ApiContext($this->config->clientid, $this->config->clientsecret);
+
+		$this->_apiContext = Paypalpayment::ApiContext($this->config->options->clientid, $this->config->options->clientsecret);
 
         $conf = config('paypal_payment');
 		$flatConfig = array_dot($conf);
-		if($this->config->mode=="sandbox")
+
+
+		if($this->config->options->mode=="sandbox")
 			$flatConfig['EndPoint'] = "https://api.sandbox.paypal.com";
 		else 
 			$flatConfig['EndPoint'] = "https://api.paypal.com";
 			
-        $flatConfig['mode'] = $this->config->mode;
+        $flatConfig['mode'] = $this->config->options->mode;
        
         $this->_apiContext->setConfig($flatConfig);
        

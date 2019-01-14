@@ -21,6 +21,8 @@
             'Paypalpayment'   => Anouar\Paypalpayment\Facades\PaypalPayment::class,
         )
 
+    Finally Pulish the package configuration by running this CMD
+        php artisan vendor:publish --provider="Anouar\Paypalpayment\PaypalpaymentServiceProvider"
 
 
 # Configurations
