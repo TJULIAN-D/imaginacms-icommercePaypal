@@ -5,6 +5,22 @@
     run php artisan module:seed Icommercepaypal
 
 ## Vendors
+    
+    add composer.json 
+        "anouar/paypalpayment":"^2.1"
+
+    add the service provider to config/app.php
+        'providers' => array(
+            // ...
+            Anouar\Paypalpayment\PaypalpaymentServiceProvider::class,
+        )
+
+    Then add an alias under aliases array.
+        'aliases' => array(
+            // ...
+            'Paypalpayment'   => Anouar\Paypalpayment\Facades\PaypalPayment::class,
+        )
+
 
 
 # Configurations

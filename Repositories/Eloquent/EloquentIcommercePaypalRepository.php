@@ -41,7 +41,7 @@ class EloquentIcommercePaypalRepository extends EloquentBaseRepository implement
         $options['mode'] = $requestmode;
 
         // Extra data in Options
-        $data['options'] = json_encode($options);
+        $data['options'] = $options;
 
         $model->update($data);
 

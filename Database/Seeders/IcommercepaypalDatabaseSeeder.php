@@ -27,7 +27,7 @@ class IcommercepaypalDatabaseSeeder extends Seeder
             'description' => trans('icommercepaypal::icommercepaypals.description'),
             'name' => config('asgard.icommercepaypal.config.paymentName'),
             'status' => 0,
-            'options' => json_encode($options)
+            'options' => $options
         );
 
         PaymentMethod::create($params);
