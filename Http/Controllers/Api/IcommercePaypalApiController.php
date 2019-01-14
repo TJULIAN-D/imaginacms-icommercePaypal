@@ -22,8 +22,6 @@ use Modules\Icommerce\Repositories\CurrencyRepository;
 use Modules\User\Contracts\Authentication;
 use Modules\User\Repositories\UserRepository;
 
-use Modules\Icommerce\Events\OrderWasCreated;
-
 // Entities
 use Modules\Icommercepaypal\Entities\Paypal;
 
@@ -34,6 +32,7 @@ class IcommercePaypalApiController extends BaseApiController
     private $paymentMethod;
     private $order;
     private $orderController;
+    private $transaction;
     private $transactionController;
     private $currency;
     private $user;
@@ -43,6 +42,7 @@ class IcommercePaypalApiController extends BaseApiController
         PaymentMethodRepository $paymentMethod,
         OrderRepository $order,
         OrderApiController $orderController,
+        TransactionRepository $transaction,
         TransactionApiController $transactionController,
         CurrencyRepository $currency,
         Authentication $auth, 
@@ -52,6 +52,7 @@ class IcommercePaypalApiController extends BaseApiController
         $this->paymentMethod = $paymentMethod;
         $this->order = $order;
         $this->orderController = $orderController;
+        $this->transaction = $transaction;
         $this->transactionController = $transactionController;
         $this->currency = $currency;
         $this->auth = $auth;
@@ -109,6 +110,16 @@ class IcommercePaypalApiController extends BaseApiController
             $payment = $this->paypal->generate($productFinal, $order->total, $orderID);
             $redirectRoute = $payment->getApprovalLink();
 
+            
+            // Update Transaction External Status
+            $external_status = explode('token=',$redirectRoute);
+           
+            $transactionUp = $this->validateResponseApi(
+                $this->transactionController->update($transaction->id,new Request([
+                    'external_status' => $external_status[1]
+                ]))
+            );
+
             // Response
             $response = [ 'data' => [
                 "redirectRoute" => $redirectRoute
@@ -135,7 +146,7 @@ class IcommercePaypalApiController extends BaseApiController
     public function response(Request $request){
 
         try {
-
+            
             \Log::info('Module Icommercepaypal: Response');
 
             // Configuration
@@ -199,6 +210,31 @@ class IcommercePaypalApiController extends BaseApiController
 
         } catch (\Exception $e) {
 
+            // Search transaction
+            $attribute = array('external_status' => $request->token);
+            $transaction = $this->transaction->findByAttributes($attribute);
+
+            if(!empty($transaction)){
+
+                $newstatusOrder = 3; // Canceled
+
+                // Update Transaction
+                $transactionUP = $this->validateResponseApi(
+                    $this->transactionController->update($transaction->id,new Request([
+                        'status' => $newstatusOrder,
+                        'external_status' => "canceled",
+                        'external_code' => $e->getCode()
+                    ]))
+                );
+
+                // Update Order Process 
+                $orderUP = $this->validateResponseApi(
+                    $this->orderController->update($transactionUP->order_id,new Request([
+                        'status_id' => $newstatusOrder,
+                    ]))
+                );
+            }
+            
             //Message Error
             $status = 500;
 
