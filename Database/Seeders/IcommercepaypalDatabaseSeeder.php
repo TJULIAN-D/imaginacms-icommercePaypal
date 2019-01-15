@@ -17,7 +17,7 @@ class IcommercepaypalDatabaseSeeder extends Seeder
     {
         Model::unguard();
 
-        $options['mainimage'] = "";
+        $options['mainimage'] = null;
         $options['clientid'] = "";
         $options['clientsecret'] = "";
         $options['mode'] = "sandbox";
