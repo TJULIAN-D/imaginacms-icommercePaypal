@@ -19,8 +19,6 @@ use Modules\Icommerce\Repositories\TransactionRepository;
 use Modules\Icommerce\Repositories\OrderRepository;
 use Modules\Icommerce\Repositories\CurrencyRepository;
 
-use Modules\User\Contracts\Authentication;
-use Modules\User\Repositories\UserRepository;
 
 // Entities
 use Modules\Icommercepaypal\Entities\Paypal;
@@ -28,35 +26,35 @@ use Modules\Icommercepaypal\Entities\Paypal;
 class IcommercePaypalApiController extends BaseApiController
 {
 
-    private $paypal;
+    private $icommercepaypal;
     private $paymentMethod;
     private $order;
     private $orderController;
     private $transaction;
     private $transactionController;
     private $currency;
-    private $user;
-    protected $auth;
 
+    private $paypal;
+   
     public function __construct(
+
+        IcommercePaypalRepository $icommercepaypal,
         PaymentMethodRepository $paymentMethod,
         OrderRepository $order,
         OrderApiController $orderController,
         TransactionRepository $transaction,
         TransactionApiController $transactionController,
-        CurrencyRepository $currency,
-        Authentication $auth, 
-        UserRepository $user
+        CurrencyRepository $currency
+         
     ){
-
+        $this->icommercepaypal = $icommercepaypal;
         $this->paymentMethod = $paymentMethod;
         $this->order = $order;
         $this->orderController = $orderController;
         $this->transaction = $transaction;
         $this->transactionController = $transactionController;
         $this->currency = $currency;
-        $this->auth = $auth;
-        $this->user = $user;
+       
     }
     
     /**
