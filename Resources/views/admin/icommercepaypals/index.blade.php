@@ -3,7 +3,7 @@
     $formID = uniqid("form_id");
 @endphp
 
-{!! Form::open(['route' => ['admin.icommercepaypal.icommercepaypal.update',$method->id], 'method' => 'put','name' => $formID]) !!}
+{!! Form::open(['route' => ['admin.icommerce.paymentmethod.update',$method->id], 'method' => 'put','name' => $formID]) !!}
 
 <div class="col-xs-12 col-sm-9">
 
