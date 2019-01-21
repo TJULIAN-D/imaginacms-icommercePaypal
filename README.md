@@ -35,7 +35,7 @@
 
 ### Init (Parameters = orderID)
     
-    https://icommerce.imagina.com.co/api/icommercepaypal/{orderid}
+    https://icommerce.imagina.com.co/api/icommercepaypal
 
 
 

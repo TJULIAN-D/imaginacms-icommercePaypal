@@ -60,14 +60,15 @@ class IcommercePaypalApiController extends BaseApiController
     /**
      * Init data
      * @param Requests request
-     * @param Requests orderid
+     * @param Requests orderID
      * @return route
      */
     public function init(Request $request){
 
         try {
 
-            $orderID = $request->orderid;
+            $orderID = $request->orderID;
+            
             \Log::info('Module Icommercepaypal: Init-ID:'.$orderID);
 
             $paymentName = config('asgard.icommercepaypal.config.paymentName');
