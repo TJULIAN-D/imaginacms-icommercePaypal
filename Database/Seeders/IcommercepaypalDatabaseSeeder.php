@@ -17,6 +17,7 @@ class IcommercepaypalDatabaseSeeder extends Seeder
     {
         Model::unguard();
 
+        $options['init'] = "Modules\Icommercepaypal\Http\Controllers\Api\IcommercePaypalApiController";
         $options['mainimage'] = null;
         $options['clientid'] = "";
         $options['clientsecret'] = "";

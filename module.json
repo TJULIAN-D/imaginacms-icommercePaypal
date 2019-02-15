@@ -1,7 +1,7 @@
 {
     "name": "Icommercepaypal",
     "alias": "icommercepaypal",
-    "description": "",
+    "description": "Paypal - PaymentMethod Module to Icommerce",
     "keywords": [],
     "version": "1.0.0",
 	"active": 1,
