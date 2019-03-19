@@ -23,15 +23,35 @@ class IcommercepaypalDatabaseSeeder extends Seeder
         $options['clientsecret'] = "";
         $options['mode'] = "sandbox";
         
-        $params = array(
-            'title' => trans('icommercepaypal::icommercepaypals.single'),
-            'description' => trans('icommercepaypal::icommercepaypals.description'),
-            'name' => config('asgard.icommercepaypal.config.paymentName'),
-            'status' => 0,
-            'options' => $options
-        );
+        $titleTrans = 'icommercepaypal::icommercepaypals.single';
+        $descriptionTrans = 'icommercepaypal::icommercepaypals.description';
 
-        PaymentMethod::create($params);
+        foreach (['en', 'es'] as $locale) {
+
+            if($locale=='en'){
+                $params = array(
+                    'title' => trans($titleTrans),
+                    'description' => trans($descriptionTrans),
+                    'name' => config('asgard.icommercepaypal.config.paymentName'),
+                    'status' => 0,
+                    'options' => $options
+                );
+
+                $paymentMethod = PaymentMethod::create($params);
+                
+            }else{
+
+                $title = trans($titleTrans,[],$locale);
+                $description = trans($descriptionTrans,[],$locale);
+
+                $paymentMethod->translateOrNew($locale)->title = $title;
+                $paymentMethod->translateOrNew($locale)->description = $description;
+
+                $paymentMethod->save();
+            }
+
+        }// Foreach
+
 
     }
 }
