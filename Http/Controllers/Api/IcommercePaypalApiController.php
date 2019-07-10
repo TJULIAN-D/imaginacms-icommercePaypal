@@ -88,12 +88,12 @@ class IcommercePaypalApiController extends BaseApiController
 
             // Create Transaction
             $transaction = $this->validateResponseApi(
-                $this->transactionController->create(new Request([
+                $this->transactionController->create(new Request(["attributes" => [
                     'order_id' => $order->id,
                     'payment_method_id' => $paymentMethod->id,
                     'amount' => $order->total,
                     'status' => $statusOrder
-                ]))
+                ]]))
             );
             
             // OrderID Method
@@ -107,15 +107,17 @@ class IcommercePaypalApiController extends BaseApiController
             $this->paypal = new Paypal($paymentMethod);
 
             $payment = $this->paypal->generate($productFinal, $order->total, $orderID);
+
             $redirectRoute = $payment->getApprovalLink();
 
-            
             // Update Transaction External Status
             $external_status = explode('token=',$redirectRoute);
            
             $transactionUp = $this->validateResponseApi(
-                $this->transactionController->update($transaction->id,new Request([
+                $this->transactionController->update($transaction->id,new Request(
+                ["attributes" =>[
                     'external_status' => $external_status[1]
+                    ]
                 ]))
             );
 
@@ -126,12 +128,20 @@ class IcommercePaypalApiController extends BaseApiController
             ]];
             
             
-          } catch (\Exception $e) {
+          } catch (\PayPal\Exception\PayPalConnectionException $pce) {
+            
+            //echo '<pre>';print_r(json_decode($pce->getData()));exit;
             //Message Error
             $status = 500;
             $response = [
-              'errors' => $e->getMessage()
+              'errors' => json_decode($pce->getData())
             ];
+            /*
+            $status = 500;
+            $response = [
+              'errors' => $pce->getMessage()
+            ];
+            */
         }
 
         return response()->json($response, $status ?? 200);
@@ -174,39 +184,61 @@ class IcommercePaypalApiController extends BaseApiController
                 $external_status = $response->state;
 
             }
-            
+        
             // Order
             $order = $this->order->find($orderID);
 
             // Update Transaction
             $transaction = $this->validateResponseApi(
-                $this->transactionController->update($transactionID,new Request([
-                    'order_id' => $order->id,
-                    'payment_method_id' => $paymentMethod->id,
-                    'amount' => $order->total,
-                    'status' => $newstatusOrder,
-                    'external_status' => $external_status
+                $this->transactionController->update($transactionID,new Request(
+                    ["attributes" => [
+                        'order_id' => $order->id,
+                        'payment_method_id' => $paymentMethod->id,
+                        'amount' => $order->total,
+                        'status' => $newstatusOrder,
+                        'external_status' => $external_status
+                    ]
                 ]))
             );
 
             // Update Order Process 
             $orderUP = $this->validateResponseApi(
-                $this->orderController->update($order->id,new Request([
-                    'order_id' => $order->id,
-                    'status_id' => $newstatusOrder,
+                $this->orderController->update($order->id,new Request(
+                    ["attributes" => [
+                        'order_id' => $order->id,
+                        'status_id' => $newstatusOrder,
+                    ]
                 ]))
             );
 
+            // Check quasar app
+            $isQuasarAPP = env("QUASAR_APP", false);
+
+            if(!$isQuasarAPP){
+
+                if (!empty($order))
+                  return redirect()->route('icommerce.order.showorder', [$order->id, $order->key]);
+                else
+                  return redirect()->route('homepage');
+                
+            }else{
+                return view('icommerce::frontend.orders.closeWindow');
+            }
+
+
             // Check order
+            /*
             if (!empty($order))
                 $redirectRoute = route('icommerce.order.showorder', [$order->id, $order->key]);
             else
                 $redirectRoute = route('homepage');
+            */
 
             // Response
             $response = [ 'data' => [
                 "redirectRoute" => $redirectRoute
             ]];
+
 
         } catch (\Exception $e) {
 
@@ -220,17 +252,21 @@ class IcommercePaypalApiController extends BaseApiController
 
                 // Update Transaction
                 $transactionUP = $this->validateResponseApi(
-                    $this->transactionController->update($transaction->id,new Request([
-                        'status' => $newstatusOrder,
-                        'external_status' => "canceled",
-                        'external_code' => $e->getCode()
+                    $this->transactionController->update($transaction->id,new Request(
+                        ["attributes" => [
+                            'status' => $newstatusOrder,
+                            'external_status' => "canceled",
+                            'external_code' => $e->getCode()
+                        ]
                     ]))
                 );
 
                 // Update Order Process 
                 $orderUP = $this->validateResponseApi(
-                    $this->orderController->update($transactionUP->order_id,new Request([
-                        'status_id' => $newstatusOrder,
+                    $this->orderController->update($transactionUP->order_id,new Request(
+                        ["attributes" => [
+                            'status_id' => $newstatusOrder,
+                        ]
                     ]))
                 );
             }

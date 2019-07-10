@@ -1,5 +1,10 @@
 url: https://github.com/imagina/asgardcms-icommercepaypal
 versions:
+  "1.0.2":
+    Changed:
+      - Add 'attributes' to order and transaction
+      - Change reedirect response
+      - Others fixes
   "1.0.0":
     added:
       - initial version 1.0.0
