@@ -3,7 +3,7 @@
     "alias": "icommercepaypal",
     "description": "Paypal - PaymentMethod Module to Icommerce",
     "keywords": [],
-    "version": "1.0.0",
+    "version": "1.0.3",
 	"active": 1,
     "order": 1,
     "providers": [

@@ -1,5 +1,5 @@
 {
-    "name": "imagina/paypal-icommerce",
+    "name": "imagina/icommercepaypal-module",
     "description": "",
     "type": "asgard-module",
     "license": "MIT",
@@ -7,7 +7,8 @@
         "php": ">=7.0.0",
         "composer/installers": "~1.0",
         "idavoll/core-module": "~3.0",
-        "imagina/icommerce-module": "1.0.0"
+        "imagina/icommerce-module": ">=1.0",
+        "anouar/paypalpayment": "^2.1"
     },
     "require-dev": {
         "phpunit/phpunit": "~6.0",

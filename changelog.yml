@@ -1,7 +1,11 @@
 url: https://github.com/imagina/asgardcms-icommercepaypal
 versions:
+  "1.0.3":
+    changed:
+      - composer require add imaigina/icomerece-module version >=1.0 and anouar/paypalpayment
+      - composer name to imagina/icommercepaypal-module
   "1.0.2":
-    Changed:
+    changed:
       - Add 'attributes' to order and transaction
       - Change reedirect response
       - Others fixes
