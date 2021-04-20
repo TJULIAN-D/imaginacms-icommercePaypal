@@ -15,43 +15,56 @@ class IcommercepaypalDatabaseSeeder extends Seeder
      */
     public function run()
     {
+
         Model::unguard();
 
-        $options['init'] = "Modules\Icommercepaypal\Http\Controllers\Api\IcommercePaypalApiController";
-        $options['mainimage'] = null;
-        $options['clientid'] = "";
-        $options['clientsecret'] = "";
-        $options['mode'] = "sandbox";
-        
-        $titleTrans = 'icommercepaypal::icommercepaypals.single';
-        $descriptionTrans = 'icommercepaypal::icommercepaypals.description';
+        $name = config('asgard.icommercepaypal.config.paymentName');
+        $result = PaymentMethod::where('name',$name)->first();
 
-        foreach (['en', 'es'] as $locale) {
+        if(!$result){
 
-            if($locale=='en'){
-                $params = array(
-                    'title' => trans($titleTrans),
-                    'description' => trans($descriptionTrans),
-                    'name' => config('asgard.icommercepaypal.config.paymentName'),
-                    'status' => 0,
-                    'options' => $options
-                );
+            $options['init'] = "Modules\Icommercepaypal\Http\Controllers\Api\IcommercePaypalApiController";
+            $options['mainimage'] = null;
+            $options['clientId'] = "";
+            $options['clientSecret'] = "";
+            $options['mode'] = "sandbox";
+            $options['minimunAmount'] = 3;
+            
+            $titleTrans = 'Paypal';
+            $descriptionTrans = 'icommercepaypal::icommercepaypals.description';
 
-                $paymentMethod = PaymentMethod::create($params);
-                
-            }else{
+            $params = array(
+                'name' => $name,
+                'status' => 1,
+                'options' => $options
+            );
+            $paymentMethod = PaymentMethod::create($params);
 
-                $title = trans($titleTrans,[],$locale);
-                $description = trans($descriptionTrans,[],$locale);
+            $this->addTranslation($paymentMethod,'en',$titleTrans,$descriptionTrans);
+            $this->addTranslation($paymentMethod,'es',$titleTrans,$descriptionTrans);
 
-                $paymentMethod->translateOrNew($locale)->title = $title;
-                $paymentMethod->translateOrNew($locale)->description = $description;
+        }else{
 
-                $paymentMethod->save();
-            }
-
-        }// Foreach
+            $this->command->alert("This method has already been installed !!");
+            
+        }
 
 
     }
+
+    /*
+    * Add Translations
+    * PD: New Alternative method due to problems with astronomic translatable
+    **/
+    public function addTranslation($paymentMethod,$locale,$title,$description){
+
+      \DB::table('icommerce__payment_method_translations')->insert([
+          'title' => trans($title,[],$locale),
+          'description' => trans($description,[],$locale),
+          'payment_method_id' => $paymentMethod->id,
+          'locale' => $locale
+      ]);
+
+    }
+
 }

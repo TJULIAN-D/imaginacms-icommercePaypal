@@ -39,6 +39,7 @@ class IcommercepaypalServiceProvider extends ServiceProvider
     {
         $this->publishConfig('icommercepaypal', 'permissions');
         $this->publishConfig('icommercepaypal', 'config');
+        $this->publishConfig('icommercepaypal', 'crud-fields');
 
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
     }

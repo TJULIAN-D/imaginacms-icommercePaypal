@@ -3,109 +3,157 @@
 namespace Modules\Icommercepaypal\Entities;
 
 use Illuminate\Database\Eloquent\Model;
-use Paypalpayment;
+
+use PayPal\Rest\ApiContext;
+use PayPal\Auth\OAuthTokenCredential;
+
+use PayPal\Api\Payer;
+use PayPal\Api\Amount;
+use PayPal\Api\Transaction;
+use PayPal\Api\RedirectUrls;
+use PayPal\Api\Payment;
+use PayPal\Api\PaymentExecution;
 
 class Paypal
 {
-	private $_apiContext;
-	private $payment;
-	private $config;
-	private $url_ok;
-	private $url_ko;
 
+	private $apiContext;
+	private $config;
+	private $urlReturn;
+	private $urlCancel;
+
+    /**
+    * Set Payer
+    * @param  $config (Payment Configuration)
+    */
 	public function __construct($config)
 	{
+
 		$this->config = $config;
-		$this->url_ok = "icommercepaypal.api.paypal.response";
-		$this->url_ko = "icommercepaypal.api.paypal.response";
+		
+		$this->urlReturn = "icommercepaypal.response";
+		$this->urlCancel = "icommercepaypal.response";
 
+		$this->apiContext = new ApiContext(
+            new OAuthTokenCredential(
+                $this->config->options->clientId,
+                $this->config->options->clientSecret
+            )
+        );
 
-		$this->_apiContext = Paypalpayment::ApiContext($this->config->options->clientid, $this->config->options->clientsecret);
+        $conf = config('asgard.icommercepaypal.config.configurations');
+       	$conf['mode'] =  $this->config->options->mode;
 
-        $conf = config('paypal_payment');
-		$flatConfig = array_dot($conf);
-
-
-		if($this->config->options->mode=="sandbox")
-			$flatConfig['EndPoint'] = "https://api.sandbox.paypal.com";
-		else 
-			$flatConfig['EndPoint'] = "https://api.paypal.com";
-			
-        $flatConfig['mode'] = $this->config->options->mode;
-       
-        $this->_apiContext->setConfig($flatConfig);
+        $this->apiContext->setConfig($conf);
        
 	}
+
+    /**
+    * Set Payer
+    * @return $payer
+    */
+    public function setPayer(){
+
+        $payer = new Payer();
+        $payer->setPaymentMethod('paypal');
+
+        return $payer;
+    }
+
+    /**
+    * Set Amount
+    * @param  $order
+    * @return $amount
+    */
+    public function setAmount($order){
+
+        $amount = new Amount();
+        $amount->setTotal($order->total);
+        $amount->setCurrency($order->currency_code);
+        //$amount->setCurrency('USD');
+
+        return $amount;
+    }
+
+    /**
+    * Set Transaction
+    * @param  $amount (Paypa Obj)
+    * @param  $order
+    * @return $transaction
+    */
+    public function setTransaction($amount,$order,$ordTransaction){
+
+        $transaction = new Transaction();
+        $transaction->setAmount($amount);
+
+        $description = "OrderId: ".$order->id."- Email: ".$order->email;
+        $transaction->setDescription($description);
+
+        $transaction->setInvoiceNumber(icommercepaypal_getOrderRefCommerce($order,$ordTransaction));
+
+        return $transaction;
+    }
+
+    /**
+    * Set Redirect Urls
+    * @param  $order
+    * @param  $ordTransaction
+    * @return $redirectUrls
+    */
+    public function setRedirectUrls($order,$ordTransaction){
+
+        $callbackUrl = route($this->urlReturn,[$order->id,$ordTransaction->id]); 
+
+        $redirectUrls = new RedirectUrls();
+        $redirectUrls->setReturnUrl($callbackUrl)
+            ->setCancelUrl($callbackUrl);  
+
+        return $redirectUrls;
+    }
+
+    /**
+    * Generate the Payment
+    * @param  $order
+    * @param  $ordTransaction
+    * @return $payment
+    */
+	public function generatePayment($order,$ordTransaction){
+
+		$payer = $this->setPayer();
+        $amount = $this->setAmount($order);
+        $transaction = $this->setTransaction($amount,$order,$ordTransaction);
+        $redirectUrls = $this->setRedirectUrls($order,$ordTransaction);
+
+        $payment = new Payment();
+        $payment->setIntent('sale')
+            ->setPayer($payer)
+            ->setTransactions(array($transaction))
+            ->setRedirectUrls($redirectUrls);
+
+        $payment->create($this->apiContext);
+
+        return $payment;
+
+	}
+
+    /**
+    * Get the Payment Information
+    * @param  $paymentId
+    * @param  $payerId
+    * @return $result
+    */
+    public function getPaymentInfor($paymentId,$payerId){
+
+        $payment = Payment::get($paymentId, $this->apiContext);
+
+        $execution = new PaymentExecution();
+        $execution->setPayerId($payerId);
+
+        $result = $payment->execute($execution, $this->apiContext);
+
+        return $result;
+    }
+
 	
-	public function generate($product,$amount,$orderId)
-	{
-		
-
-		$payment = \PaypalPayment::payment()->setIntent('sale')
-					->setPayer($this->payer())
-					->setTransactions([$this->transaction($product,$amount,$orderId)])
-					->setRedirectUrls($this->redirectURLs());
-		try {
-			$payment->create($this->_apiContext);	
-		} catch (Exception $e) {
-			dd($e);
-		}
-		return $payment;
-	}
-
-	public function payer()
-	{
-		return \PaypalPayment::payer()
-				->setPaymentMethod('paypal');
-	}
-
-	public function transaction($product,$amount,$orderId)
-	{
-		return \PaypalPayment::transaction()
-				->setAmount($this->amount($amount))
-				->setItemList($this->items($product,$amount))
-				->setDescription('Pago')
-				->setInvoiceNumber($orderId);
-	}
-
-	
-	public function items($product,$amount)
-	{
-		
-		$items = [];
-			array_push($items,\PaypalPayment::item()
-                ->setName($product["name"])
-                ->setDescription($product["title"])
-                ->setCurrency($this->config->currency)
-                ->setQuantity(1)
-                ->setPrice($amount));
-		return \PaypalPayment::itemList()->setItems($items);
-	}
-
-	
-	public function amount($amount)
-	{
-		return \PaypalPayment::amount()
-				->setCurrency($this->config->currency)
-				->setTotal($amount);
-	}
-
-	
-	public function redirectURLs()
-	{
-		
-		return \PaypalPayment::redirectUrls()
-				->setReturnUrl(route($this->url_ok))
-				->setCancelUrl(route($this->url_ko));
-	}
-
-	public function execute($paymentId,$payerId)
-	{
-		$payment = \PaypalPayment::getById($paymentId,$this->_apiContext);
-		$execution = \PaypalPayment::PaymentExecution()
-					->setPayerId($payerId);
-
-		return $payment->execute($execution,$this->_apiContext);
-	}
 	
 }

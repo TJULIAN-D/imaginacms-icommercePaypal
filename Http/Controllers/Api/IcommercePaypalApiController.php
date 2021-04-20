@@ -6,6 +6,8 @@ namespace Modules\Icommercepaypal\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
+use Modules\Icommercepaypal\Http\Requests\InitRequest;
+
 // Base Api
 use Modules\Icommerce\Http\Controllers\Api\OrderApiController;
 use Modules\Icommerce\Http\Controllers\Api\TransactionApiController;
@@ -17,8 +19,6 @@ use Modules\Icommercepaypal\Repositories\IcommercePaypalRepository;
 use Modules\Icommerce\Repositories\PaymentMethodRepository;
 use Modules\Icommerce\Repositories\TransactionRepository;
 use Modules\Icommerce\Repositories\OrderRepository;
-use Modules\Icommerce\Repositories\CurrencyRepository;
-
 
 // Entities
 use Modules\Icommercepaypal\Entities\Paypal;
@@ -35,7 +35,7 @@ class IcommercePaypalApiController extends BaseApiController
     private $currency;
 
     private $paypal;
-   
+
     public function __construct(
 
         IcommercePaypalRepository $icommercepaypal,
@@ -43,8 +43,7 @@ class IcommercePaypalApiController extends BaseApiController
         OrderRepository $order,
         OrderApiController $orderController,
         TransactionRepository $transaction,
-        TransactionApiController $transactionController,
-        CurrencyRepository $currency
+        TransactionApiController $transactionController
          
     ){
         $this->icommercepaypal = $icommercepaypal;
@@ -53,7 +52,6 @@ class IcommercePaypalApiController extends BaseApiController
         $this->orderController = $orderController;
         $this->transaction = $transaction;
         $this->transactionController = $transactionController;
-        $this->currency = $currency;
        
     }
     
@@ -67,28 +65,28 @@ class IcommercePaypalApiController extends BaseApiController
 
         try {
 
-            $orderID = $request->orderID;
-            
-            \Log::info('Module Icommercepaypal: Init-ID:'.$orderID);
+            $data = $request->all();
+           
+            $this->validateRequestApi(new InitRequest($data));
 
-            $paymentName = config('asgard.icommercepaypal.config.paymentName');
+            $orderID = $request->orderId;
 
-            // Configuration
-            $attribute = array('name' => $paymentName);
-            $paymentMethod = $this->paymentMethod->findByAttributes($attribute);
+            // Payment Method Configuration
+            $paymentMethod = icommercepaypal_getPaymentMethodConfiguration();
 
             // Order
             $order = $this->order->find($orderID);
             $statusOrder = 1; // Processing
 
-            $productFinal = array(
-                'name' => "Name: {$order->first_name} {$order->last_name}",
-                'title' => "Order: {$orderID} - {$order->email}"
-            );
+
+            // Validate minimum amount order
+            if(isset($paymentMethod->options->minimunAmount) && $order->total<$paymentMethod->options->minimunAmount)
+              throw new \Exception(trans("icommercepaypal::icommercepaypals.messages.minimum")." :".$paymentMethod->options->minimunAmount, 204);
+
 
             // Create Transaction
             $transaction = $this->validateResponseApi(
-                $this->transactionController->create(new Request(["attributes" => [
+                $this->transactionController->create(new Request( ["attributes" => [
                     'order_id' => $order->id,
                     'payment_method_id' => $paymentMethod->id,
                     'amount' => $order->total,
@@ -96,198 +94,111 @@ class IcommercePaypalApiController extends BaseApiController
                 ]]))
             );
             
-            // OrderID Method
-            $orderID = $order->id."-".$transaction->id;
-
-            // get currency active
-            $currency = $this->currency->getActive();
-            $paymentMethod->currency = $currency->code;
-            
-            // Paypal generate
+            // Init Paypal
             $this->paypal = new Paypal($paymentMethod);
 
-            $payment = $this->paypal->generate($productFinal, $order->total, $orderID);
+            // Generate Payment
+            $payment = $this->paypal->generatePayment($order,$transaction);
 
+            // Get Url
             $redirectRoute = $payment->getApprovalLink();
-
-            // Update Transaction External Status
-            $external_status = explode('token=',$redirectRoute);
-           
-            $transactionUp = $this->validateResponseApi(
-                $this->transactionController->update($transaction->id,new Request(
-                ["attributes" =>[
-                    'external_status' => $external_status[1]
-                    ]
-                ]))
-            );
 
             // Response
             $response = [ 'data' => [
                 "redirectRoute" => $redirectRoute,
                 "external" => true
             ]];
-            
-            
-          } catch (\PayPal\Exception\PayPalConnectionException $pce) {
-            
-            //echo '<pre>';print_r(json_decode($pce->getData()));exit;
-            //Message Error
+
+        } catch (\PayPal\Exception\PayPalConnectionException $e) {
+           \Log::error($e->getMessage());
             $status = 500;
             $response = [
-              'errors' => json_decode($pce->getData())
+              'errors' => json_decode($e->getData())
             ];
-            /*
-            $status = 500;
-            $response = [
-              'errors' => $pce->getMessage()
-            ];
-            */
         }
 
         return response()->json($response, $status ?? 200);
 
     }
-    
+
     /**
-     * Response Api Method
+     * Confirmation
      * @param Requests request
-     * @return route 
+     * @param Requests orderID
      */
-    public function response(Request $request){
+    public function confirmation(Request $request,$order,$transactionId){
+
+        \Log::info('Module Icommercepaypal: Confirmation - INIT - '.time());
 
         try {
-            
-            \Log::info('Module Icommercepaypal: Response');
 
-            // Configuration
-            $paymentName = config('asgard.icommercepaypal.config.paymentName');
-            $attribute = array('name' => $paymentName);
-            $paymentMethod = $this->paymentMethod->findByAttributes($attribute);
-            
-            $this->paypal = new Paypal($paymentMethod);
+            // Payment Method Configuration
+            $paymentMethod = icommercepaypal_getPaymentMethodConfiguration();
 
-            // Check the response
-            $response = $this->paypal->execute($request->paymentId, $request->PayerID);
-            $orderMethod = explode('-',$response->transactions[0]->invoice_number);
+             // Default Status Order
+            $newStatusOrder = 7; // Status Order Failed
+            $codTransactionState = "";
+            $transactionState = "";
 
-            $orderID = $orderMethod[0];
-            $transactionID = $orderMethod[1];
+            if(isset($request->paymentId) && isset($request->PayerID)){
 
-            if ($response->state == "approved") {
-    
-                $newstatusOrder = 13; // Status Order Proccesed
-                $external_status = $response->state;
+                // Init Paypal
+                $paypal = new Paypal($paymentMethod);
+
+                // Get Payment Infor
+                $payment = $paypal->getPaymentInfor($request->paymentId,$request->PayerID);
+
+                // Check State
+                if ($payment->getState() === 'approved') {
+                    $newStatusOrder  = 13; //processed
+                } 
+
+                // Get States From Commerce
+                $transactionState = $payment->getState(); 
 
             }else{
 
-                $newstatusOrder = 7;  // Status Order Failed
-                $external_status = $response->state;
-
+                $newStatusOrder = 3; // Status Order Canceled
+                $transactionState = "canceled";
+                
             }
-        
-            // Order
-            $order = $this->order->find($orderID);
+  
+            \Log::info('Module Icommercepaypal: New Status: '.$newStatusOrder);
 
             // Update Transaction
             $transaction = $this->validateResponseApi(
-                $this->transactionController->update($transactionID,new Request(
+                $this->transactionController->update($transactionId,new Request(
                     ["attributes" => [
                         'order_id' => $order->id,
                         'payment_method_id' => $paymentMethod->id,
                         'amount' => $order->total,
-                        'status' => $newstatusOrder,
-                        'external_status' => $external_status
+                        'status' => $newStatusOrder,
+                        'external_status' => $transactionState,
+                        'external_code' => $codTransactionState
                     ]
                 ]))
             );
-
-            // Update Order Process 
+                    
+            // Update Order Process
             $orderUP = $this->validateResponseApi(
                 $this->orderController->update($order->id,new Request(
-                    ["attributes" => [
+                    ["attributes" =>[
                         'order_id' => $order->id,
-                        'status_id' => $newstatusOrder,
+                        'status_id' => $newStatusOrder
                     ]
                 ]))
             );
 
-            // Check quasar app
-            $isQuasarAPP = env("QUASAR_APP", false);
-
-            if(!$isQuasarAPP){
-
-                if (!empty($order))
-                  return redirect()->route('icommerce.order.showorder', [$order->id, $order->key]);
-                else
-                  return redirect()->route('homepage');
-                
-            }else{
-                return view('icommerce::frontend.orders.closeWindow');
-            }
-
-
-            // Check order
-            /*
-            if (!empty($order))
-                $redirectRoute = route('icommerce.order.showorder', [$order->id, $order->key]);
-            else
-                $redirectRoute = route('homepage');
-            */
-
-            // Response
-            $response = [ 'data' => [
-                "redirectRoute" => $redirectRoute
-            ]];
-
-
-        } catch (\Exception $e) {
-
-            // Search transaction
-            $attribute = array('external_status' => $request->token);
-            $transaction = $this->transaction->findByAttributes($attribute);
-
-            if(!empty($transaction)){
-
-                $newstatusOrder = 3; // Canceled
-
-                // Update Transaction
-                $transactionUP = $this->validateResponseApi(
-                    $this->transactionController->update($transaction->id,new Request(
-                        ["attributes" => [
-                            'status' => $newstatusOrder,
-                            'external_status' => "canceled",
-                            'external_code' => $e->getCode()
-                        ]
-                    ]))
-                );
-
-                // Update Order Process 
-                $orderUP = $this->validateResponseApi(
-                    $this->orderController->update($transactionUP->order_id,new Request(
-                        ["attributes" => [
-                            'status_id' => $newstatusOrder,
-                        ]
-                    ]))
-                );
-            }
-            
-            //Message Error
-            $status = 500;
-
-            $response = [
-              'errors' => $e->getMessage(),
-              'code' => $e->getCode()
-            ];
+         } catch (\Exception $e) {
 
             //Log Error
-            \Log::error('Module Icommercepaypal: Message: '.$e->getMessage());
-            \Log::error('Module Icommercepaypal: Code: '.$e->getCode());
-            //\Log::error('Module Icommercepaypal: Data: '.$e->getData());
+            \Log::error('Module Icommercepaypal-Confirmation: Message: '.$e->getMessage());
+            \Log::error('Module Icommercepaypal-Confirmation: Code: '.$e->getCode());
 
         }
 
-        return response()->json($response, $status ?? 200);
-
+        \Log::info('Module Icommercepaypal: Confirmation - END');
+                
     }
 
 }

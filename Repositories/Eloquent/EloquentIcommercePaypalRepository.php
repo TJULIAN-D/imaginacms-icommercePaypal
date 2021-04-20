@@ -19,14 +19,14 @@ class EloquentIcommercePaypalRepository extends EloquentBaseRepository implement
 
         //Get data
         $requestimage = $data['mainimage'];
-        $requestclientid = $data['clientid'];
-        $requestclientsecret = $data['clientsecret'];
+        $requestclientId = $data['clientId'];
+        $requestclientSecret = $data['clientSecret'];
         $requestmode = $data['mode'];
 
         // Delete attributes
         unset($data['mainimage']);
-        unset($data['clientid']);
-        unset($data['clientsecret']);
+        unset($data['clientId']);
+        unset($data['clientSecret']);
         unset($data['mode']);
 
         // Image
@@ -36,8 +36,8 @@ class EloquentIcommercePaypalRepository extends EloquentBaseRepository implement
         $options['mainimage'] = $requestimage;
 
         // Extra data
-        $options['clientid'] = $requestclientid;
-        $options['clientsecret'] = $requestclientsecret;
+        $options['clientId'] = $requestclientId;
+        $options['clientSecret'] = $requestclientSecret;
         $options['mode'] = $requestmode;
 
         // Extra data in Options

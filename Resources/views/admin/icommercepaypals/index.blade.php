@@ -31,13 +31,13 @@
     <div class="col-xs-12">
         
         <div class="form-group ">
-            <label for="clientid">{{trans('icommercepaypal::icommercepaypals.table.clientid')}}</label>
-            <input placeholder="{{trans('icommercepaypal::icommercepaypals.table.clientid')}}" required="required" name="clientid" type="text" id="clientid" class="form-control" value="{{$method->options->clientid}}">
+            <label for="clientId">{{trans('icommercepaypal::icommercepaypals.table.clientId')}}</label>
+            <input placeholder="{{trans('icommercepaypal::icommercepaypals.table.clientId')}}" required="required" name="clientId" type="text" id="clientId" class="form-control" value="{{$method->options->clientId}}">
         </div>
 
         <div class="form-group ">
-            <label for="clientsecret">{{trans('icommercepaypal::icommercepaypals.table.clientsecret')}}</label>
-            <input placeholder="{{trans('icommercepaypal::icommercepaypals.table.clientsecret')}}" required="required" name="clientsecret" type="text" id="clientsecret" class="form-control" value="{{$method->options->clientsecret}}">
+            <label for="clientSecret">{{trans('icommercepaypal::icommercepaypals.table.clientSecret')}}</label>
+            <input placeholder="{{trans('icommercepaypal::icommercepaypals.table.clientSecret')}}" required="required" name="clientSecret" type="text" id="clientSecret" class="form-control" value="{{$method->options->clientSecret}}">
         </div>
 
         <div class="form-group">
