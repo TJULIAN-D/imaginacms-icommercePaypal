@@ -110,7 +110,9 @@ class IcommercePaypalApiController extends BaseApiController
             ]];
 
         } catch (\PayPal\Exception\PayPalConnectionException $e) {
-           \Log::error($e->getMessage());
+           
+           \Log::error($e->getData());
+
             $status = 500;
             $response = [
               'errors' => json_decode($e->getData())

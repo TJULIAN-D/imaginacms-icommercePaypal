@@ -18,7 +18,8 @@ return [
     'table' => [
         'clientId' => 'Client ID',
         'clientSecret' => 'Client Secret',
-        'mode' => 'Mode'
+        'mode' => 'Mode',
+        'currency' => 'Currency'
     ],
     'form' => [
     ],

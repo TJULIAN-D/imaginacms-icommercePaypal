@@ -91,8 +91,23 @@ return [
               ]
             ]
         ],
+        'currency' => [
+            'value' => 'USD',
+            'name' => 'currency',
+            'isFakeField' => true,
+            'type' => 'select',
+            'props' => [
+              'label' => 'icommercepaypal::icommercepaypals.table.currency',
+              'useInput' => false,
+              'useChips' => false,
+              'multiple' => false,
+              'hideDropdownIcon' => true,
+              'newValueMode' => 'add-unique',
+              'options' => config('asgard.icommercepaypal.config.currencies')
+            ]
+        ],
         'minimunAmount' => [
-          'value' => 3,
+          'value' => 0,
           'name' => 'minimunAmount',
           'isFakeField' => true,
           'type' => 'input',

@@ -68,10 +68,12 @@ class Paypal
     public function setAmount($order){
 
         $amount = new Amount();
-        $amount->setTotal($order->total);
-        $amount->setCurrency($order->currency_code);
-        //$amount->setCurrency('USD');
 
+        $total = icommercepaypal_getOrderTotalConvertion($order,$this->config);
+        $amount->setTotal($total);
+
+        $amount->setCurrency($this->config->options->currency);
+       
         return $amount;
     }
 

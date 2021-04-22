@@ -36,3 +36,34 @@ if (!function_exists('icommercepaypal_getPaymentMethodConfiguration')) {
     }
 
 }
+
+/**
+* Get Total Order Convertion in Currency Method
+* @param  $order
+* @param  $Payment Method Configuration
+* @return total
+*/
+if (!function_exists('icommercepaypal_getOrderTotalConvertion')) {
+
+	function icommercepaypal_getOrderTotalConvertion($order,$paymentMethod){
+		
+		$currenciesMethod = config('asgard.icommercepaypal.config.currencies');
+		$total = $order->total;
+		
+		if(!array_search($order->currency_code,array_column($currenciesMethod,'value'))){
+
+			$attributes = array('code'=>$paymentMethod->options->currency);
+			$currency = app('Modules\Icommerce\Repositories\CurrencyRepository')->findByAttributes($attributes);
+
+			if($currency){
+				$total = round($order->total / $currency->value,2);
+			}else{
+				throw new \Exception('Currency not found to '.$paymentMethod->options->currency, 404);
+			}
+           
+        }
+
+       	return $total;
+	}
+
+}

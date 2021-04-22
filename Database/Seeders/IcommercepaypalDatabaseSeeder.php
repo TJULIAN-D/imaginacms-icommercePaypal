@@ -28,7 +28,8 @@ class IcommercepaypalDatabaseSeeder extends Seeder
             $options['clientId'] = "";
             $options['clientSecret'] = "";
             $options['mode'] = "sandbox";
-            $options['minimunAmount'] = 3;
+            $options['currency'] = "USD";
+            $options['minimunAmount'] = 0;
             
             $titleTrans = 'Paypal';
             $descriptionTrans = 'icommercepaypal::icommercepaypals.description';
