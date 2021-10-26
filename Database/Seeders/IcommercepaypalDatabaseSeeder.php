@@ -18,6 +18,12 @@ class IcommercepaypalDatabaseSeeder extends Seeder
 
         Model::unguard();
 
+        if(!is_module_enabled('Icommercepaypal')){
+            $this->command->alert("This module: Icommercepaypal is DISABLED!! , please enable the module and then run the seed");
+            exit();
+        }
+
+        //Validation if the module has been installed before
         $name = config('asgard.icommercepaypal.config.paymentName');
         $result = PaymentMethod::where('name',$name)->first();
 
@@ -30,6 +36,7 @@ class IcommercepaypalDatabaseSeeder extends Seeder
             $options['mode'] = "sandbox";
             $options['currency'] = "USD";
             $options['minimunAmount'] = 0;
+            $options['maximumAmount'] = null;
             
             $titleTrans = 'Paypal';
             $descriptionTrans = 'icommercepaypal::icommercepaypals.description';
