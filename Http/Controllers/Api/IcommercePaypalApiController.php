@@ -54,6 +54,31 @@ class IcommercePaypalApiController extends BaseApiController
         $this->transactionController = $transactionController;
        
     }
+
+    /**
+    * Init Calculations (Validations to checkout)
+    * @param Requests request
+    * @return mixed
+    */
+    public function calculations(Request $request)
+    {
+      
+      try {
+
+        $paymentMethod = icommercepaypal_getPaymentMethodConfiguration();
+        $response = $this->icommercepaypal->calculate($request->all(), $paymentMethod->options);
+        
+      } catch (\Exception $e) {
+        //Message Error
+        $status = 500;
+        $response = [
+          'errors' => $e->getMessage()
+        ];
+      }
+      
+      return response()->json($response, $status ?? 200);
+    
+    }
     
     /**
      * Init data

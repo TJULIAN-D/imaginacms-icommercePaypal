@@ -13,4 +13,12 @@ class CacheIcommercePaypalDecorator extends BaseCacheDecorator implements Icomme
         $this->entityName = 'icommercepaypal.icommercepaypals';
         $this->repository = $icommercepaypal;
     }
+
+    public function calculate($parameters,$conf)
+    {
+        return $this->remember(function () use ($parameters,$conf) {
+            return $this->repository->calculate($parameters, $conf);
+        });
+    }
+    
 }

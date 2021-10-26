@@ -114,7 +114,31 @@ return [
           'props' => [
                 'label' => 'icommerce::common.minimum Amount'
           ]
-        ]
+        ],
+        'maximumAmount' => [
+          'value' => null,
+          'name' => 'maximumAmount',
+          'isFakeField' => true,
+          'type' => 'input',
+          'props' => [
+            'label' => 'icommerce::common.formFields.maximum Amount'
+          ]
+        ],
+        'excludedUsersForMaximumAmount' => [
+          'name' => 'excludedUsersForMaximumAmount',
+          'value' => [],
+          'type' => 'select',
+          'isFakeField' => true,
+          'loadOptions' => [
+            'apiRoute' => 'apiRoutes.quser.users',
+            'select' => ['label' => 'email', 'id' => 'id'],
+          ],
+          'props' => [
+            'label' => 'icommerce::common.formFields.excludedUsersForMaximumAmount',
+            'multiple' => true,
+            'use-chips' => true,
+          ],
+        ],
 
   ]
 
