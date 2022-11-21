@@ -18,6 +18,8 @@ class IcommercepaypalDatabaseSeeder extends Seeder
 
         Model::unguard();
 
+        $this->call(IcommercepaypalModuleTableSeeder::class);
+        
         if(!is_module_enabled('Icommercepaypal')){
             $this->command->alert("This module: Icommercepaypal is DISABLED!! , please enable the module and then run the seed");
             exit();
