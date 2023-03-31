@@ -73,6 +73,21 @@ return [
                 'label' => 'icommercepaypal::icommercepaypals.table.clientSecret'
             ]
         ],
+        'showInCurrencies' => [
+          'value' => ['USD'],
+          'name' => 'showInCurrencies',
+          'isFakeField' => true,
+          'type' => 'select',
+          'props' => [
+            'label' => 'icommerce::paymentmethods.messages.showInCurrencies',
+            'useInput' => false,
+            'useChips' => false,
+            'multiple' => true,
+            'hideDropdownIcon' => true,
+            'newValueMode' => 'add-unique',
+            'options' =>  config('asgard.icommercepaypal.config.currencies')
+          ]
+        ],
         'mode' => [
             'value' => 'sandbox',
             'name' => 'mode',

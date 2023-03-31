@@ -39,6 +39,7 @@ class IcommercepaypalDatabaseSeeder extends Seeder
             $options['currency'] = "USD";
             $options['minimunAmount'] = 0;
             $options['maximumAmount'] = null;
+            $options['showInCurrencies'] = ["USD"];
             
             $titleTrans = 'Paypal';
             $descriptionTrans = 'icommercepaypal::icommercepaypals.description';
